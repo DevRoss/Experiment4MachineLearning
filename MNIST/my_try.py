@@ -59,7 +59,7 @@ def train(mnist):
     # 计算模型的正则化损失，一般只计算神经网络边的权重的正则化损失，而不使用偏置项
     regularization = regularizer(weights1) + regularizer(weights2)
     # 总损失等于交叉熵损失和正则化损失的和
-    loss = cross_entropy + regularization
+    loss = cross_entropy_mean + regularization
     # 设置指数衰减的学习率
     learning_rate = tf.train.exponential_decay(
         LEARNING_RATE_BASE,  # 基础学习率，学习率在这个基础上递减

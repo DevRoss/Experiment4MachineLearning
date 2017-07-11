@@ -1,12 +1,13 @@
 import tensorflow as tf
 from numpy.random import RandomState
-
 # batch 大小
 batch_size = 5
 
 # 神经网络参数， 向前传播
+# w1 = tf.nn.relu(tf.Variable(tf.random_normal(shape=(2, 3), stddev=1, seed=1)))
 w1 = tf.Variable(tf.random_normal(shape=(2, 3), stddev=1, seed=1))
 w2 = tf.Variable(tf.random_normal(shape=(3, 1), stddev=1, seed=1))
+
 
 # placeholder
 # shape 第一项设为None 可以在一个维度上使用不同大小的batch， 一次性使用全部数据，

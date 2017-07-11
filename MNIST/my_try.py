@@ -1,6 +1,6 @@
 import tensorflow as tf
 import os
-from tensorflow.examples.tutorials import mnist
+from tensorflow.examples.tutorials.mnist import input_data
 
 # MNIST 数据
 INPUT_NODE = 784  # 图片784个像素点
@@ -27,7 +27,7 @@ def inference(input_tensor, avg_class, weights1, biases1, weights2, biases2):
 
 
 def train(mnist):
-    x = tf.placeholder(tf.float32, [None, LAYER1_NODE], name='x-input')
+    x = tf.placeholder(tf.float32, [None, INPUT_NODE], name='x-input')
     y_ = tf.placeholder(tf.float32, [None, OUTPUT_NODE], name='y-input')
     # 隐藏层
     weights1 = tf.Variable(tf.truncated_normal([INPUT_NODE, LAYER1_NODE], stddev=0.1))
@@ -50,7 +50,7 @@ def train(mnist):
     # 当只有分类一个正确结果的时候，可以选择使用sparse_softmax_cross_entropy_with_logits
     # 需要用argmax来得到正确答案的编号
     # tf.argmax(y_, 1) 的 1 表示在第一个维度中选取
-    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(y, tf.argmax(y_, 1))
+    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=tf.argmax(y_, 1))
     # 交叉熵平均值
     cross_entropy_mean = tf.reduce_mean(cross_entropy)
 
@@ -64,7 +64,7 @@ def train(mnist):
     learning_rate = tf.train.exponential_decay(
         LEARNING_RATE_BASE,  # 基础学习率，学习率在这个基础上递减
         global_step,  # 当前迭代的轮数
-        mnist.train.num_examples,  # 过完所有训练所需要的轮数
+        mnist.train.num_examples / BATCH_SIZE,  # 过完所有训练所需要的轮数
         LEARNING_RATE_DECAY  # 学习率的衰减率
     )
     # 梯度下降那个优化器
@@ -76,7 +76,7 @@ def train(mnist):
         train_op = tf.no_op(name='train')
 
     # 判断预测是否准确
-    correct_prediction = tf.equal(tf.case(tf.argmax(average_y, 1), tf.argmax(y_, 1)))
+    correct_prediction = tf.equal(tf.argmax(average_y, 1), tf.argmax(y_, 1))
     # 将布尔转换为实数，在求平均值
     accuracy = tf.reduce_mean(tf.case(correct_prediction, tf.float32))
 
@@ -112,11 +112,13 @@ def train(mnist):
         print('After %d training step(s), validation accuracy using average model is %g' % (TRAINING_STEPS, test_acc))
 
 
-def main(argv = None):
+def main(argv=None):
     # mnist 数据包目录位置
     data_dir = os.path.join(os.path.abspath(os.path.curdir), 'MNIST_data')
-    mnist.input_data.read_data_sets(data_dir, one_hot=True)
+    mnist = input_data.read_data_sets(data_dir, one_hot=True)
     train(mnist)
+
+
 # Tensorflow 提供一个主程序入口， tf.app.run() 会调用main
 
 if __name__ == '__main__':

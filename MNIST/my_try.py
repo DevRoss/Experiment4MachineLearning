@@ -68,7 +68,7 @@ def train(mnist):
         LEARNING_RATE_DECAY  # 学习率的衰减率
     )
     # 梯度下降那个优化器
-    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss=loss, global_step=global_step)
+    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step)
 
     # 将反向传播和计算滑动平均绑定在一起，这样就可以一次完成多个操作
     # 一下代码和  train_op = tf.group([train_step, variables_averages_op]) 等价
@@ -78,7 +78,7 @@ def train(mnist):
     # 判断预测是否准确
     correct_prediction = tf.equal(tf.argmax(average_y, 1), tf.argmax(y_, 1))
     # 将布尔转换为实数，在求平均值
-    accuracy = tf.reduce_mean(tf.case(correct_prediction, tf.float32))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     # 开始训练
     with tf.Session() as sess:

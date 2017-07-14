@@ -98,6 +98,9 @@ def train(mnist):
     # 将布尔转换为实数，在求平均值
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+    # 数据持久化
+    saver = tf.train.Saver()
+
     # 开始训练
     with tf.Session() as sess:
 
@@ -105,7 +108,13 @@ def train(mnist):
         merged = tf.summary.merge_all()
         writer = tf.summary.FileWriter('log', sess.graph)
 
+        # something.run() equal to sess.run(something)
         tf.initialize_all_variables().run()
+
+        # # 保存模型
+        # saver.save(sess, 'model/model.ckpt')
+        # # 加载模型
+        # saver.restore(sess, 'model/model.ckpt')
 
         # 验证数据
         validate_feed = {

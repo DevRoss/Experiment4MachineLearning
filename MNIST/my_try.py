@@ -19,56 +19,74 @@ MOVING_AVERAGE_DECAY = 0.99  # 滑动平均衰减率
 def inference(input_tensor, avg_class, weights1, biases1, weights2, biases2):
     # 如果没有提供滑动平均类， 直接使用参数当前的取值
     if avg_class is None:
-        layer1 = tf.nn.relu(tf.matmul(input_tensor, weights1) + biases1)
-        return tf.matmul(layer1, weights2) + biases2
+        with tf.name_scope('layer1'):
+            layer1 = tf.nn.relu(tf.matmul(input_tensor, weights1) + biases1)
+        output_layer = tf.matmul(layer1, weights2) + biases2
+        return output_layer
     else:
-        layer1 = tf.nn.relu(tf.matmul(input_tensor, avg_class.average(weights1)) + avg_class.average(biases1))
-        return tf.matmul(layer1, avg_class.average(weights2)) + avg_class.average(biases2)
+        with tf.name_scope('layer1'):
+            layer1 = tf.nn.relu(tf.matmul(input_tensor, avg_class.average(weights1)) + avg_class.average(biases1))
+        output_layer = tf.matmul(layer1, avg_class.average(weights2)) + avg_class.average(biases2)
+        return output_layer
 
 
 def train(mnist):
-    x = tf.placeholder(tf.float32, [None, INPUT_NODE], name='x-input')
-    y_ = tf.placeholder(tf.float32, [None, OUTPUT_NODE], name='y-input')
+    with tf.name_scope('inputs_layer'):
+        x = tf.placeholder(tf.float32, [None, INPUT_NODE], name='x-input')
+        y_ = tf.placeholder(tf.float32, [None, OUTPUT_NODE], name='y-input')
     # 隐藏层
-    weights1 = tf.Variable(tf.truncated_normal([INPUT_NODE, LAYER1_NODE], stddev=0.1))
-    biases1 = tf.Variable(tf.constant(0.1, shape=[LAYER1_NODE]))
+    with tf.name_scope('layer1'):
+        weights1 = tf.Variable(tf.truncated_normal([INPUT_NODE, LAYER1_NODE], stddev=0.1))
+        biases1 = tf.Variable(tf.constant(0.1, shape=[LAYER1_NODE]))
+    # 添加 histogram tensorboard
+    tf.summary.histogram('weights1', weights1)
+    tf.summary.histogram('biases1', biases1)
 
     # 输出层
-    weights2 = tf.Variable(tf.truncated_normal([LAYER1_NODE, OUTPUT_NODE], stddev=0.1))
-    biases2 = tf.Variable(tf.constant(0.1, shape=[OUTPUT_NODE]))
-
+    with tf.name_scope('output_layer'):
+        weights2 = tf.Variable(tf.truncated_normal([LAYER1_NODE, OUTPUT_NODE], stddev=0.1))
+        biases2 = tf.Variable(tf.constant(0.1, shape=[OUTPUT_NODE]))
+        # 添加 histogram tensorboard
+        tf.summary.histogram('weights2', weights2)
+        tf.summary.histogram('biases2', biases2)
     # 不使用滑动平均模型
-    y = inference(x, None, weights1, biases1, weights2, biases2)
+    with tf.name_scope('output_layer'):
+        y = inference(x, None, weights1, biases1, weights2, biases2)
 
     # 训练的时候不会被修改变量
     global_step = tf.Variable(0, trainable=False)
+    tf.summary.histogram('global_step', global_step)
     variable_averages = tf.train.ExponentialMovingAverage(decay=MOVING_AVERAGE_DECAY, num_updates=global_step)
     # 将滑动平均应用到全部变量中
     variables_averages_op = variable_averages.apply(tf.trainable_variables())
-    average_y = inference(x, variable_averages, weights1, biases1, weights2, biases2)
+    with tf.name_scope('output_layer'):
+        average_y = inference(x, variable_averages, weights1, biases1, weights2, biases2)
 
-    # 当只有分类一个正确结果的时候，可以选择使用sparse_softmax_cross_entropy_with_logits
-    # 需要用argmax来得到正确答案的编号
-    # tf.argmax(y_, 1) 的 1 表示在第一个维度中选取
-    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=tf.argmax(y_, 1))
-    # 交叉熵平均值
-    cross_entropy_mean = tf.reduce_mean(cross_entropy)
+    with tf.name_scope('loss'):
+        # 当只有分类一个正确结果的时候，可以选择使用sparse_softmax_cross_entropy_with_logits
+        # 需要用argmax来得到正确答案的编号
+        # tf.argmax(y_, 1) 的 1 表示在第一个维度中选取
+        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=tf.argmax(y_, 1))
+        # 交叉熵平均值
+        cross_entropy_mean = tf.reduce_mean(cross_entropy)
 
-    # 正则化
-    regularizer = tf.contrib.layers.l2_regularizer(REGULARIZATION_RATE)
-    # 计算模型的正则化损失，一般只计算神经网络边的权重的正则化损失，而不使用偏置项
-    regularization = regularizer(weights1) + regularizer(weights2)
-    # 总损失等于交叉熵损失和正则化损失的和
-    loss = cross_entropy_mean + regularization
-    # 设置指数衰减的学习率
-    learning_rate = tf.train.exponential_decay(
-        LEARNING_RATE_BASE,  # 基础学习率，学习率在这个基础上递减
-        global_step,  # 当前迭代的轮数
-        mnist.train.num_examples / BATCH_SIZE,  # 过完所有训练所需要的轮数
-        LEARNING_RATE_DECAY  # 学习率的衰减率
-    )
-    # 梯度下降那个优化器
-    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step)
+        # 正则化
+        regularizer = tf.contrib.layers.l2_regularizer(REGULARIZATION_RATE)
+        # 计算模型的正则化损失，一般只计算神经网络边的权重的正则化损失，而不使用偏置项
+        regularization = regularizer(weights1) + regularizer(weights2)
+        # 总损失等于交叉熵损失和正则化损失的和
+        loss = cross_entropy_mean + regularization
+        # 添加 scalar tensorboard
+        tf.summary.scalar('loss', loss)
+        # 设置指数衰减的学习率
+        learning_rate = tf.train.exponential_decay(
+            LEARNING_RATE_BASE,  # 基础学习率，学习率在这个基础上递减
+            global_step,  # 当前迭代的轮数
+            mnist.train.num_examples / BATCH_SIZE,  # 过完所有训练所需要的轮数
+            LEARNING_RATE_DECAY  # 学习率的衰减率
+        )
+        # 梯度下降那个优化器
+        train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step)
 
     # 将反向传播和计算滑动平均绑定在一起，这样就可以一次完成多个操作
     # 一下代码和  train_op = tf.group([train_step, variables_averages_op]) 等价
@@ -82,6 +100,11 @@ def train(mnist):
 
     # 开始训练
     with tf.Session() as sess:
+
+        # tensorboard 先合并所有summary
+        merged = tf.summary.merge_all()
+        writer = tf.summary.FileWriter('log', sess.graph)
+
         tf.initialize_all_variables().run()
 
         # 验证数据
@@ -99,6 +122,9 @@ def train(mnist):
         # 训练神经网络
         for i in range(TRAINING_STEPS):
             if i % 1000 == 0:
+                # 每隔1000 步就 merge 一次，并添加到 tensorboard
+                result = sess.run(merged, feed_dict=test_feed)
+                writer.add_summary(result, i)
                 # mnist 数据较小，可以一次放入
                 test_acc = sess.run(accuracy, feed_dict=test_feed)
                 validate_acc = sess.run(accuracy, feed_dict=validate_feed)

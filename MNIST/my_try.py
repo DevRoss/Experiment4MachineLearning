@@ -98,8 +98,8 @@ def train(mnist):
     # 将布尔转换为实数，在求平均值
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-    # 数据持久化
-    saver = tf.train.Saver()
+    # # 数据持久化
+    # saver = tf.train.Saver()
 
     # 开始训练
     with tf.Session() as sess:

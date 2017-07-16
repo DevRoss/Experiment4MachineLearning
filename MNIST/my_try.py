@@ -99,7 +99,7 @@ def train(mnist):
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     # # 数据持久化
-    # saver = tf.train.Saver()
+    saver = tf.train.Saver()
 
     # 开始训练
     with tf.Session() as sess:

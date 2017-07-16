@@ -21,6 +21,15 @@ with tf.Session() as sess:
         sess, graph_def, ['add']
     )
 
-    # 写入文件，记得先新建文件夹
-    with tf.gfile.GFile('model/model.pb', 'wb') as f:
-        f.write(output_graph_def.SerializeToString())
+    # # 写入文件，记得先新建文件夹
+    # with tf.gfile.GFile('model/model.pb', 'wb') as f:
+    #     f.write(output_graph_def.SerializeToString())
+
+    # 读取文件
+    # 通常用于迁移学习
+    model_file = 'model/model.pb'
+    with tf.gfile.FastGFile(model_file, 'rb') as f:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+        result = tf.import_graph_def(graph_def, return_elements=['add:0'])
+        print(sess.run(result))

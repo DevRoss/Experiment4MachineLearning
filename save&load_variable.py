@@ -13,7 +13,9 @@ init = tf.initialize_all_variables()
 with tf.Session() as sess:
     sess.run(init)
     # saver.save(sess, 'saver/model.ckpt')
-    saver.restore(sess, 'saver/model.ckpt')
+    # saver.restore(sess, 'saver/model.ckpt')
+    # 以json格式导出
+    saver.export_meta_graph('saver/model.json', as_text=True)
     print(sess.run(v1))
     for _ in tf.all_variables():
         print(_.name)

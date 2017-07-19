@@ -26,6 +26,10 @@ padding: tensorflow 提供了 'SAME' 和 'VALID' 两个选择，SAME 表示填�
 conv = tf.nn.conv2d(input_layer, filter_weight, strides=[1, 1, 1, 1], padding='SAME')
 
 # biases
+'''
+不能直接添加biases，因为需要为每一个节点都调价biases
+例如： 将3x3 的图片卷积成 2x2，需要为2x2的矩阵每一个值都添加biases
+'''
 bias = tf.nn.bias_add(conv, biases)
 
 # excitement function

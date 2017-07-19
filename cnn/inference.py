@@ -10,3 +10,6 @@ conv = tf.nn.conv2d(input, filter_weight, strides=[1, 1, 1, 1], padding='SAME')
 
 # biases
 bias = tf.nn.bias_add(conv, biases)
+
+# excitement function
+actived_conv = tf.nn.relu(bias)

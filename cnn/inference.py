@@ -18,6 +18,11 @@ filter_weight = tf.Variable(tf.truncated_normal(shape=[5, 5, 3, 16], stddev=0.1)
 biases = tf.Variable(tf.constant(0.1, shape=[16]), name='biases')
 
 # convolution
+'''
+卷积层向前传播
+strides: 表示不同维度的步长，第一个和第四个必须为1才能使得传播有效，
+padding: tensorflow 提供了 'SAME' 和 'VALID' 两个选择，SAME 表示填充0，VALID表示不填充
+'''
 conv = tf.nn.conv2d(input_layer, filter_weight, strides=[1, 1, 1, 1], padding='SAME')
 
 # biases

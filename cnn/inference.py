@@ -37,3 +37,15 @@ bias = tf.nn.bias_add(conv, biases)
 激活函数
 '''
 actived_conv = tf.nn.relu(bias)
+
+# pooling
+'''
+pooling 和 convolution 的作用对象不同， convolution 作用对象包括深度在内的三维矩阵（立方体），
+pooling作用对象是深度为二维矩形，即深度为1矩形
+
+pool 有助于防止过拟合问题，和加快计算速度
+ksize: kernel size 过滤器尺寸，和strides一样第一项和第四项要为1的时候才起作用
+strides: 和卷积层一样，表示不同维度的步长，第一个和第四个必须为1才能使得传播有效
+padding: 和卷积层一样，tensorflow 提供了 'SAME' 和 'VALID' 两个选择，SAME 表示填充0，VALID表示不填充
+'''
+pool = tf.nn.max_pool(actived_conv, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')

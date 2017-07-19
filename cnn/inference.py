@@ -7,3 +7,6 @@ biases = tf.Variable(tf.constant(0.1), name='biases')
 
 # convolution
 conv = tf.nn.conv2d(input, filter_weight, strides=[1, 1, 1, 1], padding='SAME')
+
+# biases
+bias = tf.nn.bias_add(conv, biases)

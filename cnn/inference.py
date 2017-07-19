@@ -33,4 +33,7 @@ conv = tf.nn.conv2d(input_layer, filter_weight, strides=[1, 1, 1, 1], padding='S
 bias = tf.nn.bias_add(conv, biases)
 
 # excitement function
+'''
+激活函数
+'''
 actived_conv = tf.nn.relu(bias)

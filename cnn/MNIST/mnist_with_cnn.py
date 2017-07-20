@@ -41,3 +41,7 @@ def inference(input_tensor, train, regularizer):
         conv2_biases = tf.Variable(tf.constant(0.0, shape=[CONV1_DEPTH]), name='conv2_biases')
         conv2 = tf.nn.conv2d(pool1, conv2_weight, [1, 1, 1, 1], padding='SAME')
         relu2 = tf.nn.relu(tf.nn.bias_add(conv2, conv2_biases))
+
+    # Fourth cnn layer for pooling
+    with tf.name_scope('layer4-pool2'):
+        pool2 = tf.nn.max_pool(relu2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')

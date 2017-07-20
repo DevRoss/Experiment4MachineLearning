@@ -45,3 +45,8 @@ def inference(input_tensor, train, regularizer):
     # Fourth cnn layer for pooling
     with tf.name_scope('layer4-pool2'):
         pool2 = tf.nn.max_pool(relu2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+
+    # 三维矩阵向量化
+    pool_shape = pool2.get_shape().as_list()  # [a, b, c, d] 其中a, b, c , 分别问batch， 长、宽、高
+    nodes = sum(_ for _ in pool_shape[1:])
+    reshaped = tf.reshape(pool2, [pool_shape[0]], nodes)  # 向量化

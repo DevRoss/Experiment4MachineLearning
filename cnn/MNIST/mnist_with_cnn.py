@@ -57,7 +57,16 @@ def inference(input_tensor, train, regularizer):
         if regularizer is not None:
             tf.add_to_collection('losses', regularizer(fc1_weight))
         fc1_biases = tf.Variable(tf.constant(0.1, [FC_SIZE]), name='fc1_biases')
-        fc1 = tf.nn.relu(tf.matmul(reshaped, fc1_weight) + fc1_biases) # 向前传播
+        fc1 = tf.nn.relu(tf.matmul(reshaped, fc1_weight) + fc1_biases)  # 向前传播
         # dropout 在训练时将部分节点输出改为0，避免过拟合
         if train:
             fc1 = tf.nn.dropout(fc1, 0.5)
+
+    # Sixth layer for full connected neural network (prediction output)
+    with tf.variable_scope('layer6-fc2'):
+        fc2_weight = tf.Variable(tf.truncated_normal([FC_SIZE, NUM_LABELS], stddev=0.1), name='fc2_weight')
+        if regularizer is not None:
+            tf.add_to_collection('losses', regularizer(fc2_weight))
+        fc2_biases = tf.Variable(tf.constant(0.1, shape=[NUM_CHANNELS]), name='fc2_biases')
+        logit = tf.matmul(fc1, fc2_weight) + fc2_biases
+    return logit

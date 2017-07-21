@@ -9,14 +9,14 @@ REGULARIZATION_RATE = 0.0001  # 正则化损失函数的
 LEARNING_RATE_BASE = 0.8  # 基础学习率
 LEARNING_RATE_DECAY = 0.99  # 学习率的衰减率
 TRAINING_STEPS = 30000  # 训练轮数
+MOVING_AVERAGE_DECAY = 0.99
 
 # 模型保存
 MODEL_SAVE_PATH = os.path.join(os.path.abspath(os.path.curdir), 'model')
-MODEL_NAME = 'mnist'
+MODEL_NAME = 'mnist.ckpt'
 
 # MNIST
 DATA_DIR = r'F:\project\tf_quick_start\MNIST\MNIST_data'
-
 
 
 def train(mnist):
@@ -33,15 +33,16 @@ def train(mnist):
     regularizer = tf.contrib.layers.l2_regularizer(REGULARIZATION_RATE)
 
     # output layer
-    y = inference(x, train=True, regularizer=regularizer)
+    y = inference(x, train=False, regularizer=regularizer)
 
     # losses
     with tf.name_scope('loss'):
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(y_, 1), logits=y)
-        cross_entropy_mean =tf.reduce_mean(cross_entropy)
+        cross_entropy_mean = tf.reduce_mean(cross_entropy)
 
     # learning rate decay
     global_step = tf.Variable(0, trainable=False)
+    loss = cross_entropy_mean + tf.add_n(tf.get_collection('losses'))
     learning_rate = tf.train.exponential_decay(
         LEARNING_RATE_BASE,
         global_step,
@@ -50,11 +51,10 @@ def train(mnist):
     )
 
     # Train with gradient descent
-    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(cross_entropy_mean, global_step)
+    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step)
 
     saver = tf.train.Saver()
     init_op = tf.initialize_all_variables()
-
     with tf.Session() as sess:
         sess.run(init_op)
 
@@ -66,8 +66,8 @@ def train(mnist):
                                       IMAGE_SIZE,
                                       NUM_CHANNELS]
                                      )
-            train_op, loss_value, step = sess.run([train_step, cross_entropy_mean, global_step],
-                                                  feed_dict={x:reshaped_xs, y_:ys})
+            train_op, loss_value, step = sess.run([train_step, loss, global_step],
+                                                  feed_dict={x: reshaped_xs, y_: ys})
             if i % 1000 == 0:
                 # 每1000次保存一次模型
                 print('After %d training step(s), loss on training batch is %g' % (step, loss_value))
@@ -78,6 +78,7 @@ def train(mnist):
 def main(argv=None):
     mnist = input_data.read_data_sets(DATA_DIR, one_hot=True)
     train(mnist)
+
 
 if __name__ == '__main__':
     tf.app.run()

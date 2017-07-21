@@ -17,3 +17,6 @@ def train(mnist):
 
     # 正则化
     regularizer = tf.contrib.layers.l2_regularizer(REGULARIZATION_RATE)
+
+    # output layer
+    y = inference(x, train=True, regularizer=regularizer)

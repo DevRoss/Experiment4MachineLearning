@@ -36,3 +36,6 @@ def train(mnist):
         mnist.train.num_examples / BATCH_SIZE,
         LEARNING_RATE_DECAY
     )
+
+    # Train with gradient descent
+    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(cross_entropy_mean, global_step)

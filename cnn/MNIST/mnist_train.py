@@ -1,11 +1,16 @@
 from .mnist_with_cnn import *
 import tensorflow as tf
+import os
 
 BATCH_SIZE = 100
 REGULARIZATION_RATE = 0.0001  # 正则化损失函数的
 LEARNING_RATE_BASE = 0.8  # 基础学习率
 LEARNING_RATE_DECAY = 0.99  # 学习率的衰减率
 TRAINING_STEPS = 30000  # 训练轮数
+
+# 模型保存
+MODEL_SAVE_PATH = os.path.join(os.path.abspath(os.path.curdir), 'model')
+MODEL_NAME = 'mnist'
 
 
 def train(mnist):
@@ -53,3 +58,7 @@ def train(mnist):
 
         train_op, loss_value, step = sess.run([train_step, cross_entropy_mean, global_step],
                                               feed_dict={x:xs, y_:ys})
+        if i % 1000 == 0:
+            # 每1000次保存一次模型
+            print('After %d training step(s), loss on training batch is %g' % (step, loss_value))
+            saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step)

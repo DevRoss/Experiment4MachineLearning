@@ -3,6 +3,8 @@ import tensorflow as tf
 
 BATCH_SIZE = 100
 REGULARIZATION_RATE = 0.0001  # 正则化损失函数的
+LEARNING_RATE_BASE = 0.8  # 基础学习率
+LEARNING_RATE_DECAY = 0.99  # 学习率的衰减率
 
 
 def train(mnist):
@@ -26,3 +28,11 @@ def train(mnist):
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(y_, 1), logits=y)
         cross_entropy_mean =tf.reduce_mean(cross_entropy)
 
+    # learning rate decay
+    global_step = tf.Variable(0, trainable=False)
+    learning_rate = tf.train.exponential_decay(
+        LEARNING_RATE_BASE,
+        global_step,
+        mnist.train.num_examples / BATCH_SIZE,
+        LEARNING_RATE_DECAY
+    )

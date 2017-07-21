@@ -2,6 +2,7 @@ from mnist_with_cnn import *
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 import os
+import numpy as np
 
 BATCH_SIZE = 100
 REGULARIZATION_RATE = 0.0001  # 正则化损失函数的
@@ -57,15 +58,20 @@ def train(mnist):
     with tf.Session() as sess:
         sess.run(init_op)
 
-    for i in range(TRAINING_STEPS):
-        xs, ys = mnist.train.next_batch(BATCH_SIZE)
-
-        train_op, loss_value, step = sess.run([train_step, cross_entropy_mean, global_step],
-                                              feed_dict={x:xs, y_:ys})
-        if i % 1000 == 0:
-            # 每1000次保存一次模型
-            print('After %d training step(s), loss on training batch is %g' % (step, loss_value))
-            saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step)
+        for i in range(TRAINING_STEPS):
+            xs, ys = mnist.train.next_batch(BATCH_SIZE)
+            reshaped_xs = np.reshape(xs,
+                                     [BATCH_SIZE,
+                                      IMAGE_SIZE,
+                                      IMAGE_SIZE,
+                                      NUM_CHANNELS]
+                                     )
+            train_op, loss_value, step = sess.run([train_step, cross_entropy_mean, global_step],
+                                                  feed_dict={x:reshaped_xs, y_:ys})
+            if i % 1000 == 0:
+                # 每1000次保存一次模型
+                print('After %d training step(s), loss on training batch is %g' % (step, loss_value))
+                saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step)
 
 
 # 主函数

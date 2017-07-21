@@ -5,6 +5,7 @@ BATCH_SIZE = 100
 REGULARIZATION_RATE = 0.0001  # 正则化损失函数的
 LEARNING_RATE_BASE = 0.8  # 基础学习率
 LEARNING_RATE_DECAY = 0.99  # 学习率的衰减率
+TRAINING_STEPS = 30000  # 训练轮数
 
 
 def train(mnist):
@@ -46,3 +47,9 @@ def train(mnist):
 
     with tf.Session() as sess:
         sess.run(init_op)
+
+    for i in range(TRAINING_STEPS):
+        xs, ys = mnist.train.next_batch(BATCH_SIZE)
+
+        train_op, loss_value, step = sess.run([train_step, cross_entropy_mean, global_step],
+                                              feed_dict={x:xs, y_:ys})

@@ -20,3 +20,9 @@ def train(mnist):
 
     # output layer
     y = inference(x, train=True, regularizer=regularizer)
+
+    # losses
+    with tf.name_scope('loss'):
+        cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(y_, 1), logits=y)
+        cross_entropy_mean =tf.reduce_mean(cross_entropy)
+

@@ -50,14 +50,14 @@ def inference(input_tensor, train=False, regularizer=None):
     # 三维矩阵向量化
     pool_shape = pool2.get_shape().as_list()  # [a, b, c, d] 其中a, b, c , 分别问batch， 长、宽、高
     nodes = reduce(lambda a, b: a * b, pool_shape[1:])
-    reshaped = tf.reshape(pool2, [pool_shape[0]], nodes)  # 向量化
+    reshaped = tf.reshape(pool2, [pool_shape[0], nodes])  # 向量化
 
     # Fifth layer for full connected neural network
     with tf.variable_scope('layer5-fc1'):
         fc1_weight = tf.Variable(tf.truncated_normal([nodes, FC_SIZE], stddev=0.1), name='fc1_weight')
         if regularizer is not None:
             tf.add_to_collection('losses', regularizer(fc1_weight))
-        fc1_biases = tf.Variable(tf.constant(0.1, [FC_SIZE]), name='fc1_biases')
+        fc1_biases = tf.Variable(tf.constant(0.1, shape=[FC_SIZE]), name='fc1_biases')
         fc1 = tf.nn.relu(tf.matmul(reshaped, fc1_weight) + fc1_biases)  # 向前传播
         # dropout 在训练时将部分节点输出改为0，避免过拟合
         if train:

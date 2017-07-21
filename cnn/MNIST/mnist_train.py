@@ -1,4 +1,4 @@
-from .mnist_with_cnn import *
+from mnist_with_cnn import *
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 import os
@@ -51,9 +51,8 @@ def train(mnist):
     # Train with gradient descent
     train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(cross_entropy_mean, global_step)
 
-
     saver = tf.train.Saver()
-    init_op =tf.initialize_all_variables()
+    init_op = tf.initialize_all_variables()
 
     with tf.Session() as sess:
         sess.run(init_op)

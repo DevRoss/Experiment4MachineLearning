@@ -1,5 +1,6 @@
 # coding: utf-8
 import tensorflow as tf
+from functools import reduce
 
 # 神经网络
 INPUT_NODE = 784
@@ -48,7 +49,7 @@ def inference(input_tensor, train=False, regularizer=None):
 
     # 三维矩阵向量化
     pool_shape = pool2.get_shape().as_list()  # [a, b, c, d] 其中a, b, c , 分别问batch， 长、宽、高
-    nodes = sum(_ for _ in pool_shape[1:])
+    nodes = reduce(lambda a, b: a * b, pool_shape[1:])
     reshaped = tf.reshape(pool2, [pool_shape[0]], nodes)  # 向量化
 
     # Fifth layer for full connected neural network

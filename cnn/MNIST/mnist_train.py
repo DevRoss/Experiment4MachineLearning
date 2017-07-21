@@ -1,5 +1,6 @@
 from .mnist_with_cnn import *
 import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 import os
 
 BATCH_SIZE = 100
@@ -11,6 +12,10 @@ TRAINING_STEPS = 30000  # 训练轮数
 # 模型保存
 MODEL_SAVE_PATH = os.path.join(os.path.abspath(os.path.curdir), 'model')
 MODEL_NAME = 'mnist'
+
+# MNIST
+DATA_DIR = r'F:\project\tf_quick_start\MNIST\MNIST_data'
+
 
 
 def train(mnist):
@@ -62,3 +67,12 @@ def train(mnist):
             # 每1000次保存一次模型
             print('After %d training step(s), loss on training batch is %g' % (step, loss_value))
             saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step)
+
+
+# 主函数
+def main(argv=None):
+    mnist = input_data.read_data_sets(DATA_DIR, one_hot=True)
+    train(mnist)
+
+if __name__ == '__main__':
+    tf.app.run()

@@ -21,7 +21,7 @@ CONV2_DEPTH = 64
 FC_SIZE = 512
 
 
-def inference(input_tensor, train, regularizer):
+def inference(input_tensor, train=False, regularizer=None):
     # First cnn layer for convolution
     with tf.variable_scope('layer1-conv1'):
         conv1_weight = tf.Variable(tf.truncated_normal([CONV1_SIZE, CONV1_SIZE, NUM_CHANNELS, CONV1_DEPTH], stddev=0.1),

@@ -29,20 +29,20 @@ def train(mnist):
                             NUM_CHANNELS], name='x-input')
         y_ = tf.placeholder(tf.float32, [BATCH_SIZE, OUT_NODE], name='y-input')
 
+    global_step = tf.Variable(0, trainable=False)
     # 正则化
     regularizer = tf.contrib.layers.l2_regularizer(REGULARIZATION_RATE)
 
     # output layer
-    y = inference(x, train=False, regularizer=regularizer)
+    y = inference(x, train=True, regularizer=regularizer)
 
     # losses
     with tf.name_scope('loss'):
         cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(y_, 1), logits=y)
         cross_entropy_mean = tf.reduce_mean(cross_entropy)
+    loss = cross_entropy_mean + tf.add_n(tf.get_collection('losses'))
 
     # learning rate decay
-    global_step = tf.Variable(0, trainable=False)
-    loss = cross_entropy_mean + tf.add_n(tf.get_collection('losses'))
     learning_rate = tf.train.exponential_decay(
         LEARNING_RATE_BASE,
         global_step,
@@ -50,9 +50,15 @@ def train(mnist):
         LEARNING_RATE_DECAY
     )
 
+    # MovingAverage
+    variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)
+    variable_averages_op = variable_averages.apply(tf.trainable_variables())
     # Train with gradient descent
-    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step)
+    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
 
+    # bind MV and train_step
+    with tf.control_dependencies([train_step, variable_averages_op]):
+        train_op = tf.no_op(name='train')
     saver = tf.train.Saver()
     init_op = tf.initialize_all_variables()
     with tf.Session() as sess:
@@ -66,12 +72,12 @@ def train(mnist):
                                       IMAGE_SIZE,
                                       NUM_CHANNELS]
                                      )
-            train_op, loss_value, step = sess.run([train_step, loss, global_step],
-                                                  feed_dict={x: reshaped_xs, y_: ys})
-            if i % 1000 == 0:
+            _, loss_value, step = sess.run([train_op, loss, global_step],
+                                           feed_dict={x: reshaped_xs, y_: ys})
+            if i % 100 == 0:
                 # 每1000次保存一次模型
                 print('After %d training step(s), loss on training batch is %g' % (step, loss_value))
-                saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step)
+                # saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step)
 
 
 # 主函数

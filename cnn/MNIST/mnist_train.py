@@ -14,7 +14,7 @@ MOVING_AVERAGE_DECAY = 0.99
 # 模型保存
 MODEL_SAVE_PATH = os.path.join(os.path.abspath(os.path.curdir), 'model')
 MODEL_NAME = 'mnist.ckpt'
-
+SAVING_MODEL = os.path.join(MODEL_SAVE_PATH, MODEL_NAME)
 # MNIST
 DATA_DIR = r'F:\project\tf_quick_start\MNIST\MNIST_data'
 
@@ -51,10 +51,10 @@ def train(mnist):
     )
 
     # MovingAverage
-    variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)
+    variable_averages = tf.train.ExponentialMovingAverage(decay=MOVING_AVERAGE_DECAY, num_updates=global_step)
     variable_averages_op = variable_averages.apply(tf.trainable_variables())
     # Train with gradient descent
-    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
+    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step)
 
     # bind MV and train_step
     with tf.control_dependencies([train_step, variable_averages_op]):
@@ -72,12 +72,15 @@ def train(mnist):
                                       IMAGE_SIZE,
                                       NUM_CHANNELS]
                                      )
-            _, loss_value, step = sess.run([train_op, loss, global_step],
-                                           feed_dict={x: reshaped_xs, y_: ys})
-            if i % 100 == 0:
+            # _, loss_value, step = sess.run([train_op, loss, global_step],
+            #                                feed_dict={x: reshaped_xs, y_: ys})
+            sess.run(train_op, feed_dict={x: reshaped_xs, y_: ys})
+            if i % 1000 == 0:
                 # 每1000次保存一次模型
+                loss_value = sess.run(loss, feed_dict={x: reshaped_xs, y_: ys})
+                step = sess.run(global_step, feed_dict={x: reshaped_xs, y_: ys})
                 print('After %d training step(s), loss on training batch is %g' % (step, loss_value))
-                # saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step)
+                saver.save(sess, SAVING_MODEL, global_step)
 
 
 # 主函数

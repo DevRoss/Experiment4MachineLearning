@@ -98,3 +98,29 @@ def get_random_cached_bottlenecks(sess, n_class, result, how_many, category,
         ground_truths.append(ground_truth)
 
     return bottlenecks, ground_truths
+
+
+def main():
+    result = get_flower(TESTING_PERCENTAGE, VALIDATION_PERCENTAGE)('flower_photos')
+    n_class = len(result.keys())
+    # 读取模型
+    with gfile.FastGFile(os.path.join(MODEL_DIR, MODEL_FILE), 'rb') as f:
+        graph_def = tf.GraphDef()
+        graph_def.ParseFromString(f.read())
+    bottleneck_tensor, jpeg_data_tensor = tf.import_graph_def(graph_def,
+                                                              return_elements=[BOTTLENECK_TENSOR_NAME,
+                                                                               JPEG_DATA_TENSOR_NAME])
+
+    bottleneck_input = tf.placeholder(tf.float32, [None, BOTTLENECK_TENSOR_SIZE], name='BottleneckInputPlaceholder')
+    ground_truth_input = tf.placeholder(tf.float32, [None, n_class], name='GroundTruthInput')
+
+    with tf.name_scope('final_training_ops'):
+        weights = tf.Variable(tf.truncated_normal([BOTTLENECK_TENSOR_SIZE, n_class], stddev=0.1))
+        biases = tf.Variable(tf.zeros([n_class]))
+        logits = tf.matmul(bottleneck_tensor, weights) +biases
+        final_tensor = tf.nn.softmax(logits)
+
+    # 交叉熵作为损失函数
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits, ground_truth_input)
+    cross_entropy_mean = tf.reduce_mean(cross_entropy)
+    train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(cross_entropy_mean)

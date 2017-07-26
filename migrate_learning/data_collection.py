@@ -42,6 +42,21 @@ def percentage(testing_percentage, validation_percentage):
 
 
 def get_flower(testing_percentage, validation_percentage):
+    '''
+
+    :param testing_percentage:
+    :param validation_percentage:
+    :return:
+        result = {
+                  flower_label:
+                    {
+                        'training': [],
+                        'testing': [],
+                        'validation': []
+                    }
+                }
+    '''
+
     @percentage(testing_percentage, validation_percentage)
     def get_data_as_dict(folder):
         '''
@@ -68,6 +83,19 @@ def get_flower(testing_percentage, validation_percentage):
 
     return get_data_as_dict
 
+
+def get_image(result, label_name, index, category):
+    '''
+
+    :param result: 结果集合
+    :param label_name: 标签名
+    :param index: 想要图片的位置
+    :param category: 分为训练集，测试集，验证集
+    :return: 一个图片的绝对路径
+    '''
+    flowers = result[label_name][category]
+    mod_index = index % len(flowers)
+    return flowers[mod_index]
 
 # a = get_flower(20, 30)('flower_photos')
 # print(a['roses'])

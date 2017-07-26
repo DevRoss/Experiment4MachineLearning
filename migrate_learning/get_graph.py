@@ -117,7 +117,7 @@ def main(_):
     with tf.name_scope('final_training_ops'):
         weights = tf.Variable(tf.truncated_normal([BOTTLENECK_TENSOR_SIZE, n_class], stddev=0.001))
         biases = tf.Variable(tf.zeros([n_class]))
-        logits = tf.matmul(bottleneck_tensor, weights) + biases
+        logits = tf.matmul(bottleneck_input, weights) + biases
         final_tensor = tf.nn.softmax(logits)
 
     # 交叉熵作为损失函数

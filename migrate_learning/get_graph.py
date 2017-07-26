@@ -1,5 +1,6 @@
 import tensorflow as tf
 import os
+from data_collection import get_image
 
 # Inception-v3 模型瓶颈层节点数
 BOTTLENECK_TENSOR_SIZE = 2048
@@ -30,3 +31,13 @@ TESTING_PERCENTAGE = 10
 LEARNING_RATE = 0.01
 STEPS = 4000
 BATCH = 100
+
+
+# 经过Inception v3 处理后特征的存放位置
+def get_bottleneck_path(result, label_name, index, category):
+    return get_image(result, label_name, index, category) + '.txt'
+
+
+# 传入图片，后的特征向量
+def run_bottleneck_on_image(sess, image_data, image_data_tensor, bottleneck_tensor):
+    bottleneck_values = sess.run(bottleneck_tensor, {image_data_tensor: image_data})

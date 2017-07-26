@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 import os
-from data_collection import get_image
+from data_collection import get_image, get_flower
 import numpy as np
 import random
 
@@ -100,7 +100,7 @@ def get_random_cached_bottlenecks(sess, n_class, result, how_many, category,
     return bottlenecks, ground_truths
 
 
-def main():
+def main(_):
     result = get_flower(TESTING_PERCENTAGE, VALIDATION_PERCENTAGE)('flower_photos')
     n_class = len(result.keys())
     # 读取模型
@@ -115,12 +115,46 @@ def main():
     ground_truth_input = tf.placeholder(tf.float32, [None, n_class], name='GroundTruthInput')
 
     with tf.name_scope('final_training_ops'):
-        weights = tf.Variable(tf.truncated_normal([BOTTLENECK_TENSOR_SIZE, n_class], stddev=0.1))
+        weights = tf.Variable(tf.truncated_normal([BOTTLENECK_TENSOR_SIZE, n_class], stddev=0.001))
         biases = tf.Variable(tf.zeros([n_class]))
-        logits = tf.matmul(bottleneck_tensor, weights) +biases
+        logits = tf.matmul(bottleneck_tensor, weights) + biases
         final_tensor = tf.nn.softmax(logits)
 
     # 交叉熵作为损失函数
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits, ground_truth_input)
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=ground_truth_input)
     cross_entropy_mean = tf.reduce_mean(cross_entropy)
     train_step = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(cross_entropy_mean)
+
+    # 计算正确率
+    with tf.name_scope('evaluation'):
+        correct_prediction = tf.equal(tf.argmax(final_tensor, 1), tf.argmax(ground_truth_input, 1))
+        evaluation_step = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+    with tf.Session() as sess:
+        init = tf.initialize_all_variables()
+        sess.run(init)
+
+        for i in range(STEPS):
+            train_bottlenecks, train_ground_truth = get_random_cached_bottlenecks(sess, n_class, result, BATCH,
+                                                                                  'training', jpeg_data_tensor,
+                                                                                  bottleneck_tensor)
+
+            sess.run(train_step, feed_dict={bottleneck_input: train_bottlenecks,
+                                            ground_truth_input: train_ground_truth})
+
+            # 验证正确率
+            if i % 100 == 0:
+                validation_bottlenecks, validation_ground_truth = get_random_cached_bottlenecks(sess, n_class, result,
+                                                                                                BATCH,
+                                                                                                'validation',
+                                                                                                jpeg_data_tensor,
+                                                                                                bottleneck_tensor)
+                validation_accuracy = sess.run(evaluation_step, feed_dict={bottleneck_input: validation_bottlenecks,
+                                                                           ground_truth_input: validation_ground_truth})
+
+                print('Step %d Validation accuracy on random sampled %d examples = %.lf%%' % (
+                    i, BATCH, validation_accuracy * 100))
+
+
+if __name__ == '__main__':
+    tf.app.run()

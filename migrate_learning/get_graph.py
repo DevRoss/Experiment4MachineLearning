@@ -3,6 +3,7 @@ from tensorflow.python.platform import gfile
 import os
 from data_collection import get_image
 import numpy as np
+import random
 
 # Inception-v3 模型瓶颈层节点数
 BOTTLENECK_TENSOR_SIZE = 2048
@@ -54,7 +55,6 @@ def run_bottleneck_on_image(sess, image_data, image_data_tensor, bottleneck_tens
 
 # 缓存机制，如果特征向量已经保存，则返回特征向量，否则先存入文件，再返回特征向量。
 def get_or_create_bottleneck(sess, result, label_name, index, category, jpeg_data_tensor, bottleneck_tensor):
-    label_lists = result[label_name]
     sub_dir_path = os.path.join(CACHE_DIR, label_name)
     if not os.path.exists(sub_dir_path):
         os.makedirs(sub_dir_path)
@@ -79,3 +79,22 @@ def get_or_create_bottleneck(sess, result, label_name, index, category, jpeg_dat
         bottleneck_values = [float(x) for x in bottleneck_string.split(',')]
 
     return bottleneck_values
+
+
+# 随机读取一个batch 作为训练数据
+def get_random_cached_bottlenecks(sess, n_class, result, how_many, category,
+                                  jpeg_data_tensor, bottleneck_tensor):
+    bottlenecks = list()
+    ground_truths = list()
+    for _ in range(how_many):
+        label_index = random.randrange(n_class)
+        label_name = list(result.keys())[label_index]
+        image_index = random.randrange(65536)
+        bottleneck = get_or_create_bottleneck(sess, result, label_name, image_index, category, jpeg_data_tensor,
+                                              bottleneck_tensor)
+        ground_truth = np.zeros(n_class, dtype=np.float32)
+        ground_truth[label_index] = 1.0
+        bottlenecks.append(bottleneck)
+        ground_truths.append(ground_truth)
+
+    return bottlenecks, ground_truths

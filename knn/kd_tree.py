@@ -10,10 +10,9 @@ class Node:
         self.rchild = None
 
 
-stack = list()
 kd_tree = None
-K = 3
-n_data = 10  # 每个点的维度 n
+K = 5
+n_data = 3  # 每个点的维度 n
 m_data = 1000  # m个点
 random = np.random.RandomState(666)
 
@@ -59,5 +58,35 @@ def create_kd_tree(root, data_list, exclude_dim):
     return root
 
 
+def compute_distance(p1: Node, p2: np.array):
+    return np.linalg.norm((p1.data - p2))
+
+
+def search_nn(root: Node, point, k):
+    stack = list()  # [(node, dis)]
+    node_k = list()
+    compare_node = root
+    while compare_node:
+        stack.append(compare_node)
+        dim = compare_node.dimension
+        dis = compute_distance(compare_node, point)
+        # 不满 k个node
+        if len(node_k) < k:
+            node_k.append((compare_node, dis))
+        else:
+            node_k_max = max(node_k, key=lambda x: x[1])
+            node_k_max_index = node_k.index(node_k_max)
+            # 将距离最大的pop
+            if dis < node_k[node_k_max_index][1]:
+                node_k[node_k_max_index] = (compare_node, dis)
+
+        # 当前维度小就向左走，大就向右走
+        if point[dim] < compare_node.data[dim]:
+            compare_node = compare_node.lchild
+        else:
+            compare_node = compare_node.rchild
+
+
 kd_tree = create_kd_tree(kd_tree, x_data, -1)
 root = kd_tree
+search_nn(root, np.array([1, 3, 5]), 6)

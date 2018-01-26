@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.framework import graph_util
+import os
 
 '''
 保存训练好的模型，不用保存类似于变量初始化，模型保存等的辅助节点
@@ -27,8 +28,15 @@ with tf.Session() as sess:
 
     # 读取文件
     # 通常用于迁移学习
-    model_file = 'model/model.pb'
-    with tf.gfile.FastGFile(model_file, 'rb') as f:
+    model_file = './graph.pb'
+
+    if not os.path.exists(os.path.dirname(model_file)):
+        os.mkdir(os.path.dirname(model_file))
+
+    with tf.gfile.GFile(model_file, 'wb') as f:
+        f.write(output_graph_def.SerializeToString())
+
+    with tf.gfile.GFile(model_file, 'rb') as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString(f.read())
         result = tf.import_graph_def(graph_def, return_elements=['add:0'])

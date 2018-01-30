@@ -42,7 +42,7 @@ def max_var_dim(data, exclude_dim):
     return max_index
 
 
-def create_kd_tree(root, data_list, exclude_dim, deep):
+def create_kd_tree(root, data_list, exclude_dim):
     if data_list.shape[0] == 0:
         return None
         # 找到该维度的中位点

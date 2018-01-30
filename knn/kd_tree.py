@@ -14,9 +14,9 @@ kd_tree = None
 K = 5
 n_data = 3  # 每个点的维度 n
 m_data = 1000  # m个点
-random = np.random.RandomState(666)
+random = np.random.RandomState(666162123)
 
-x_data = random.randint(-1000, 1000, (m_data, n_data))
+x_data = random.randint(0, 1000, (m_data, n_data))
 
 
 # print(x_data)
@@ -68,21 +68,17 @@ def compute_distance2(p1, p2: np.array):
 
 def search_nn(root: Node, point, k):
     stack = list()  # [(node, dis)]
-    node_k = list()
+    # node_k = list()
+    min_dis = compute_distance(root, point)
+    NN = root
     compare_node = root
     while compare_node:
         stack.append(compare_node)
         dim = compare_node.dimension
         dis = compute_distance(compare_node, point)
-        # 不满 k个node
-        if len(node_k) < k:
-            node_k.append((compare_node, dis))
-        else:
-            node_k_max = max(node_k, key=lambda x: x[1])
-            node_k_max_index = node_k.index(node_k_max)
-            # 将距离最大的pop
-            if dis < node_k[node_k_max_index][1]:
-                node_k[node_k_max_index] = (compare_node, dis)
+        if dis < min_dis:
+            min_dis = dis
+            NN = compare_node
 
         # 当前维度小就向左走，大就向右走
         if point[dim] < compare_node.data[dim]:
@@ -91,51 +87,29 @@ def search_nn(root: Node, point, k):
             compare_node = compare_node.rchild
     # 回溯
     while stack:
-        # node_k 的中最大距离最大的(node, dis)
-        node_k_max = max(node_k, key=lambda x: x[1])
         node = stack.pop()
-        # 进入另一个结点
-        # for node_, dis in node_k:
-        #     print(node_, dis)
-        # print(compute_distance(node, point))
         dim = node.dimension
-        if len(node_k) < k or compute_distance(node, point) < node_k_max[1]:
-        # if len(node_k) < k or abs(point[dim] - node.data[dim]) < node_k_max[1]:
-            # 当前节点的dimension
-            # for node_, dis in node_k:
-            #     print(node_, dis)
-            # print(compute_distance(node, point))
-            dim = node.dimension
+        if compute_distance(node, point) < min_dis:
+        # if abs(point[dim] - node.data[dim]) < min_dis:
             if point[dim] <= node.data[dim]:
-                compare_node = node.rchild
+                temp_node = node.rchild
             else:
-                compare_node = node.lchild
-            # compare_node不是叶子结点
-            if compare_node:
-                stack.append(compare_node)
-                # 更新 node_k
-                dis = compute_distance(compare_node, point)
-                if len(node_k) < k:
-                    node_k.append((compare_node, dis))
-                else:
-                    if dis < node_k_max[1]:
-                        node_k_max_index = node_k.index(node_k_max)
-                        node_k[node_k_max_index] = (compare_node, dis)
+                temp_node = node.lchild
 
-    return node_k
+            if temp_node:
+                stack.append(temp_node)
+                dis = compute_distance(temp_node, point)
+                if dis < min_dis:
+                    min_dis = dis
+                    NN = temp_node
+    return NN, min_dis
 
 
 kd_tree = create_kd_tree(kd_tree, x_data, -1)
 root = kd_tree
-import time
-start = time.time()
-result = search_nn(root, np.array([1, 3, 5]), K)
-end = time.time()
-print(end - start)
-for node, dis in result:
-    print(node, dis)
+NN, MIN = search_nn(root, np.array([1, 3, 5]), K)
 
-start = time.time()
+print(NN, MIN)
 min_dis = list()
 for point in x_data:
     dis = compute_distance(point, np.array([1, 3, 5]))
@@ -145,6 +119,5 @@ for point in x_data:
         min_dis = sorted(min_dis)
         if min_dis[-1] > dis:
             min_dis[-1] = dis
-end = time.time()
-print(end - start)
+
 print(min_dis)

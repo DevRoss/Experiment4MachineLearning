@@ -9,12 +9,12 @@ from keras.preprocessing.sequence import pad_sequences
 import tensorflow as tf
 
 logger = logging.getLogger()
-data_dir = '1d5x_fold'  # 数据文件夹
+data_dir = '../smp2017_5fold'  # 数据文件夹
 
-np_x_train_data = '{fold}train_x_fold.npy'
-np_y_train_data = '{fold}train_y_fold.npy'
-np_x_test_data = '{fold}val_x_fold.npy'
-np_y_test_data = '{fold}val_y_fold.npy'
+np_x_train_data = '{fold}_train_test_x_train_kf_smp_bow.npy'
+np_y_train_data = '{fold}_train_test_y_train_kf_smp_bow.npy'
+np_x_test_data = '{fold}_train_test_x_test_kf_smp_bow.npy'
+np_y_test_data = '{fold}_train_test_y_test_kf_smp_bow.npy'
 
 # 最大词数
 MAX_LEN = 20
@@ -46,18 +46,20 @@ if __name__ == '__main__':
         logger.info('Running' + solver)
         for hidden_layer_size in hidden_layer_sizes:
             for alpha in alphas:
-                for fold in range(0, 3):
-                    x_train = pad_sequences(np.load(os.path.join(data_dir, np_x_train_data.format(fold=fold))), 20)
-                    x_train = x_train.reshape((len(x_train), -1))
+                for fold in range(0, 5):
+                    # x_train = pad_sequences(np.load(os.path.join(data_dir, np_x_train_data.format(fold=fold))), 20)
+                    # x_train = x_train.reshape((len(x_train), -1))
+                    x_train = np.load(os.path.join(data_dir, np_x_train_data.format(fold=fold)))
                     y_train = np.load(os.path.join(data_dir, np_y_train_data.format(fold=fold)))
-
-                    x_test = pad_sequences(np.load(os.path.join(data_dir, np_x_test_data.format(fold=fold))), 20)
-                    x_test = x_test.reshape((len(x_test), -1))
+                    # x_test = pad_sequences(np.load(os.path.join(data_dir, np_x_test_data.format(fold=fold))), 20)
+                    # x_test = x_test.reshape((len(x_test), -1))
+                    x_test = np.load(os.path.join(data_dir, np_x_test_data.format(fold=fold)))
                     y_test = np.load(os.path.join(data_dir, np_y_test_data.format(fold=fold)))
 
                     y_train = np_utils.to_categorical(y_train, 31)  # 31个分类
                     y_test = np_utils.to_categorical(y_test, 31)
-
+                    print(x_train.shape)
+                    print(y_train.shape)
                     acc = Cross_validation(x_train, y_train, x_test, y_test, hidden_layer_size, alpha, solver, max_iter)
                     result.append((acc, hidden_layer_size, alpha, max_iter, solver))
     logger.info('Model training done.')

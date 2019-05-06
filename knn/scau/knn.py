@@ -1,6 +1,8 @@
 # coding: utf-8
 
 # -*- coding:utf-8 -*-
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
 from numpy import *
 import os
 
@@ -44,33 +46,16 @@ def img2vector(filename):
 
 
 def loadDataSet():
-    ## Step1: 获取训练集
-    print("---Getting training set...")
-    # 根据实际情况设置数据集路径
-    dataSetDir = ""
-    trainingFileList = os.listdir(dataSetDir + "trainingDigits")
-    numSamples = len(trainingFileList)
+    # 获取训练集
+    def get_iris_data():
+        iris = load_iris()
+        iris_data = iris.data
+        iris_target = iris.target
+        return iris_data, iris_target
 
-    train_x = zeros((numSamples, 1024))
-    train_y = []  # 保存标签数据，即分类结果
-    for i in range(numSamples):
-        filename = trainingFileList[i]
-        train_x[i, :] = img2vector(dataSetDir + "trainingDigits/%s" % filename)
-        label = int(filename.split('_')[0])
-        train_y.append(label)
-
-    ## Step2: 获取测试集
-    print("---Getting test set...")
-    testFileList = os.listdir(dataSetDir + "testDigits")
-    numSamples = len(testFileList)
-
-    test_x = zeros((numSamples, 1024))
-    test_y = []  # 保存标签数据，即分类结果
-    for i in range(numSamples):
-        filename = testFileList[i]
-        test_x[i, :] = img2vector(dataSetDir + "testDigits/%s" % filename)
-        label = int(filename.split('_')[0])
-        test_y.append(label)
+    iris_data, iris_target = get_iris_data()
+    # 2.将数据分割成训练集和测试集 test_size=0.33表示将50个的数据用作测试集
+    train_x, test_x, train_y, test_y = train_test_split(iris_data, iris_target, test_size=0.33)
     return train_x, train_y, test_x, test_y
 
 

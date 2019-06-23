@@ -34,10 +34,6 @@ import operator
 #     return train, test
 
 
-train_data, test_data = loadDataSet()
-labels = ['feature{}'.format(i) for i in range(len(train_data[0]) - 1)]
-
-
 def createDataSet():
     dataSet = [[1, 1, 'yes'],
                [1, 1, 'yes'],
@@ -208,4 +204,5 @@ if __name__ == '__main__':
     inputTree = createTree(dataSet, featLabels)
     dataSet, featLabels = createDataSet()
     testVec = [1, 0]
+    print('input: ', testVec)
     print(classify(inputTree, featLabels, testVec))
